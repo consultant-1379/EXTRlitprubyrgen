@@ -1,0 +1,124 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.ericsson.nms.litp.3pps</groupId>
+    <artifactId>EXTRlitprubyrgen_CXP9031337</artifactId>
+    <packaging>rpm</packaging>
+    <name>[${project.parent.artifactId}] RPM module</name>
+    <description>LITP Ruby rgen 3PP</description>
+
+    <parent>
+        <groupId>com.ericsson.nms.litp.3pps</groupId>
+        <artifactId>EXTRlitprubyrgen</artifactId>
+        <version>2.2.3-SNAPSHOT</version>
+    </parent>
+    <properties>
+    <!-- publishes the rpm module to the ci portal -->
+        <publish_artifact>true</publish_artifact>
+        <packaging.type>rpm</packaging.type>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.5</version>
+                <executions>
+                    <execution>
+                        <!-- Download Ruby rgen -->
+                        <id>unpack_ruby-rgen</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.puppetlabs</groupId>
+                                    <artifactId>ruby-rgen</artifactId>
+                                    <version>${ruby-rgen.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/src/</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <executable>tar</executable>
+                            <workingDirectory>${project.build.directory}/src/rgen-${ruby-rgen.version}/</workingDirectory>
+                            <arguments>
+                                <argument>-xvzf</argument>
+                                <argument>data.tar.gz</argument>
+                            </arguments>
+                        </configuration>
+                        <id>extract_ruby-rgen-data</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>rpm-maven-plugin</artifactId>
+                <version>2.1-alpha-1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <needarch>x86_64</needarch>
+                    <group>Development/Languages</group>
+                    <summary>Ruby Modeling and Generator Framework</summary>
+                    <description>
+ruby-rgen ${ruby-rgen.version} repackaged by Ericsson from Puppet Labs source code.
+RGen is a framework for Model Driven Software Development (MDSD) in Ruby.
+This means that it helps you build Metamodels, instantiate Models, modify and transform Models and finally generate arbitrary textual content from it.
+                    </description>
+                    <requires>
+                        <require>rpmlib(CompressedFileNames) &lt;= 3.0.4-1 </require>
+                        <require>rpmlib(FileDigests) &lt;= 4.6.0-1 </require>
+                        <require>rpmlib(PayloadFilesHavePrefix) &lt;= 4.0-1 </require>
+                        <require>ruby &gt;= 1.8 </require>
+                        <require>rpmlib(PayloadIsXz) &lt;= 5.2-1 </require>
+                    </requires>
+                    <provides>
+                    	<provide>ruby-rgen = 0.6.5</provide>
+                    </provides>
+		    <mappings>
+                      <mapping>
+                        <directory>/usr/share/ruby/vendor_ruby/</directory>
+                        <configuration>false</configuration>
+                        <sources>
+                          <source>
+                            <location>${project.build.directory}/src/rgen-${ruby-rgen.version}/lib/</location>
+                          </source>
+                        </sources>
+                      </mapping>
+                      <mapping>
+                        <directory>/usr/share/doc/ruby-rgen-${ruby-rgen.version}/</directory>
+                        <configuration>false</configuration>
+                        <sources>
+                          <source>
+                            <location>${project.build.directory}/src/rgen-${ruby-rgen.version}/</location>
+                            <includes>
+                              <include>CHANGELOG</include>
+                              <include>MIT-LICENSE</include>
+                              <include>Rakefile</include>
+                              <include>README.rdoc</include>
+                            </includes>
+                          </source>
+                        </sources>
+                      </mapping>
+                    </mappings>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
